@@ -6,6 +6,7 @@ const {
   createBrand,
   getBrand,
   getBrands,
+  getAllBrands,
   updateBrand,
   deleteBrand,
 } = require("../controllers/brand");
@@ -24,7 +25,8 @@ router.put(
 );
 router.delete("/:bid", [verifyAccessToken, isAdmin], deleteBrand);
 
-router.get("/:bid", getBrand);
+router.get("/get", getAllBrands);
 router.get("/", getBrands);
+router.get("/:bid", getBrand);
 
 module.exports = router;

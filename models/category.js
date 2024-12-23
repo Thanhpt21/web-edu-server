@@ -12,12 +12,6 @@ var categorySchema = new mongoose.Schema(
     images: {
       type: String,
     },
-    brands: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Brand", // Tên của model Brand
-      },
-    ],
   },
   {
     timestamps: true,

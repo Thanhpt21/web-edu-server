@@ -12,6 +12,7 @@ const configRouter = require("./config");
 const menuRouter = require("./menu");
 const shipRouter = require("./ship");
 const retailRouter = require("./retail");
+const uploadRouter = require("./upload");
 
 const { notFound, errorHandler } = require("../middlewares/errorHandle");
 
@@ -30,6 +31,7 @@ const initRouter = (app) => {
   app.use("/api/menu", menuRouter);
   app.use("/api/ship", shipRouter);
   app.use("/api/retail", retailRouter);
+  app.use("/api/upload", uploadRouter);
   app.use(notFound);
   app.use(errorHandler);
 };

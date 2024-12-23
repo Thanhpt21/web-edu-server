@@ -2,13 +2,7 @@ const Category = require("../models/category");
 const asyncHandler = require("express-async-handler");
 
 const createCategory = asyncHandler(async (req, res) => {
-  const { title, brand } = req.body;
-  if (brand) {
-    const inputString = req.body.brand;
-    const arrayFromSplit = inputString.split(",");
-    const transformedArray = arrayFromSplit.map((item) => item);
-    req.body.brand = transformedArray;
-  }
+  const { title } = req.body;
 
   const images = req?.file?.path;
   if (!title) throw new Error("Missing input");
@@ -39,10 +33,7 @@ const getCategories = asyncHandler(async (req, res) => {
     ];
   }
 
-  let query = Category.find(formatedQueryObj).populate({
-    path: "brands",
-    select: "title images",
-  });
+  let query = Category.find(formatedQueryObj);
 
   //sorting
   if (req.query.sort) {
@@ -95,15 +86,6 @@ const updateCategory = asyncHandler(async (req, res) => {
   const { cid } = req.params;
   if (req.file) {
     req.body.images = req.file.path;
-  }
-
-  const { brand } = req.body;
-
-  if (brand) {
-    const inputString = req.body.brand;
-    const arrayFromSplit = inputString.split(",");
-    const transformedArray = arrayFromSplit.map((item) => item);
-    req.body.brand = transformedArray;
   }
 
   const response = await Category.findByIdAndUpdate(cid, req.body, {

@@ -28,14 +28,6 @@ const createBrand = asyncHandler(async (req, res) => {
 
   const response = await Brand.create(req.body);
 
-  if (category) {
-    await Category.findByIdAndUpdate(
-      category,
-      { $addToSet: { brands: response._id } },
-      { new: true } // Trả về đối tượng đã cập nhật
-    );
-  }
-
   res.status(200).json({
     success: response ? true : false,
     message: response ? "Tạo thành công" : "Đã xảy ra lỗi",
@@ -128,30 +120,35 @@ const updateBrand = asyncHandler(async (req, res) => {
     return res.status(404).json({ success: false, message: "Brand not found" });
   }
 
-  // Cập nhật Category cũ nếu có
-  if (brand.category && brand.category.toString() !== category) {
-    await Category.findByIdAndUpdate(
-      brand.category,
-      { $pull: { brands: bid } }, // Xóa ID của Brand khỏi mảng brands
-      { new: true }
-    );
-  }
   // Cập nhật Brand
   const response = await Brand.findByIdAndUpdate(bid, req.body, {
     new: true,
   });
-  // Cập nhật Category mới nếu có
-  if (category) {
-    await Category.findByIdAndUpdate(
-      category,
-      { $addToSet: { brands: bid } }, // Thêm ID của Brand vào mảng brands
-      { new: true }
-    );
-  }
 
   res.status(200).json({
     success: response ? true : false,
     message: response ? "Cập nhật thành công" : "Đã xảy ra lỗi",
+  });
+});
+
+const getAllBrands = asyncHandler(async (req, res) => {
+  const { category } = req.query; // Get the category from the query parameters
+
+  // Build the query object: if 'category' is provided, filter by it, otherwise return all brands
+  let query = category
+    ? {
+        category: mongoose.isValidObjectId(category)
+          ? mongoose.Types.ObjectId(category)
+          : { $regex: category, $options: "i" },
+      }
+    : {};
+
+  // Fetch brands based on the constructed query (empty query for all brands)
+  const response = await Brand.find(query);
+
+  res.status(200).json({
+    success: response ? true : false,
+    brandData: response ? response : "Đã xảy ra lỗi",
   });
 });
 
@@ -167,6 +164,7 @@ const deleteBrand = asyncHandler(async (req, res) => {
 module.exports = {
   createBrand,
   getBrands,
+  getAllBrands,
   getBrand,
   updateBrand,
   deleteBrand,

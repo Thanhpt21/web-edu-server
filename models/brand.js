@@ -11,6 +11,7 @@ var brandSchema = new mongoose.Schema(
     },
     images: {
       type: String,
+      required: true,
     },
     category: {
       type: mongoose.Schema.Types.ObjectId,
