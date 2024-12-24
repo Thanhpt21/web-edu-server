@@ -14,6 +14,7 @@ const shipRouter = require("./ship");
 const retailRouter = require("./retail");
 const uploadRouter = require("./upload");
 const permissionRouter = require("./permission");
+const sizeRouter = require("./size");
 
 const { notFound, errorHandler } = require("../middlewares/errorHandle");
 
@@ -34,6 +35,7 @@ const initRouter = (app) => {
   app.use("/api/retail", retailRouter);
   app.use("/api/upload", uploadRouter);
   app.use("/api/permission", permissionRouter);
+  app.use("/api/size", sizeRouter);
   app.use(notFound);
   app.use(errorHandler);
 };

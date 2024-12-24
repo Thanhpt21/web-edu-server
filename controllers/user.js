@@ -260,6 +260,10 @@ const current = asyncHandler(async (req, res) => {
         path: "category",
         select: "title",
       },
+    })
+    .populate({
+      path: "permission",
+      select: "name link",
     });
 
   return res.status(200).json({

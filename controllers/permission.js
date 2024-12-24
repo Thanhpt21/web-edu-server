@@ -3,7 +3,6 @@ const asyncHandler = require("express-async-handler");
 
 // Tạo quyền mới (Create Permission)
 const createPermission = asyncHandler(async (req, res) => {
-  console.log(req.body);
   const { name, link } = req.body;
   if (!name || !link) throw new Error("Missing input");
 
