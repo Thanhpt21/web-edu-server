@@ -18,6 +18,8 @@ const {
   updateCart,
   removeProductCart,
   updateWishlist,
+  updateUserPermissions,
+  getUserPermissions,
 } = require("../controllers/user");
 
 router.post("/register", register);
@@ -37,6 +39,7 @@ router.post("/refreshtoken", refreshAccessToken);
 router.get("/logout", logout);
 router.get("/forgotpassword", forgotPassword);
 router.put("/resetpassword", resetPassword);
+router.get("/:uid/permissions", getUserPermissions);
 router.get("/", [verifyAccessToken, isAdmin], getUsers);
 router.delete("/:uid", [verifyAccessToken, isAdmin], deleteUser);
 router.put("/wishlist/:pid", verifyAccessToken, updateWishlist);

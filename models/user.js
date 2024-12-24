@@ -72,6 +72,7 @@ var userSchema = new mongoose.Schema(
     registerToken: {
       type: String,
     },
+    permission: [{ type: mongoose.Schema.Types.ObjectId, ref: "Permission" }],
   },
   {
     timestamps: true,

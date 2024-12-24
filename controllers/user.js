@@ -307,13 +307,28 @@ const updateUser = asyncHandler(async (req, res) => {
 
 const updateUserByAdmin = asyncHandler(async (req, res) => {
   const { uid } = req.params;
+  const { permissions } = req.body; // Lấy thông tin permissions từ body request
+
   try {
-    const response = await User.findByIdAndUpdate(uid, req.body, {
+    // Nếu có permissions, thì cập nhật trường permission trong cơ sở dữ liệu
+    const updateData = {
+      ...req.body, // Lấy tất cả các dữ liệu từ req.body
+    };
+
+    // Cập nhật trường permission nếu có
+    if (permissions) {
+      updateData.permission = permissions;
+    }
+
+    // Cập nhật người dùng
+    const response = await User.findByIdAndUpdate(uid, updateData, {
       new: true,
     }).select("-password -role -refreshToken");
+
     res.status(200).json({
       success: response ? true : false,
       message: response ? "Cập nhật thành công" : "Đã xảy ra lỗi",
+      data: response, // Gửi thông tin người dùng đã cập nhật về client
     });
   } catch (error) {
     throw new Error(error);
@@ -467,6 +482,41 @@ const updateWishlist = asyncHandler(async (req, res) => {
   }
 });
 
+const getUserPermissions = asyncHandler(async (req, res) => {
+  const { uid } = req.params; // Retrieve the userId from the request parameters
+
+  if (!uid) {
+    return res.status(400).json({
+      success: false,
+      message: "User ID is required.",
+    });
+  }
+
+  try {
+    // Find the user by ID and select only the "permissions" field
+    const user = await User.findById(uid).select("permissions").exec();
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found.",
+      });
+    }
+
+    // Return the permissions of the user
+    return res.status(200).json({
+      success: true,
+      permissions: user.permissions,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: "Error retrieving user permissions.",
+    });
+  }
+});
+
 module.exports = {
   register,
   login,
@@ -483,4 +533,5 @@ module.exports = {
   updateCart,
   removeProductCart,
   updateWishlist,
+  getUserPermissions,
 };
