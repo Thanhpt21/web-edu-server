@@ -18,6 +18,7 @@ const createProduct = asyncHandler(async (req, res) => {
     category,
     code,
     tags,
+    size,
   } = req.body;
   const thumb = req?.files?.thumb[0]?.path;
   const images = req?.files?.images?.map((el) => el.path);
@@ -32,6 +33,11 @@ const createProduct = asyncHandler(async (req, res) => {
   if (tags) {
     req.body.tags = tags.split(",").map((tag) => tag.trim());
   }
+
+  if (size) {
+    req.body.size = size.split(",").map((size) => size.trim());
+  }
+
   const cat = await Category.findById(category);
   if (!cat) {
     return res.status(404).json({ message: "Category not found" });
@@ -242,9 +248,16 @@ const updateProduct = asyncHandler(async (req, res) => {
     req.body.tags = req.body.tags.split(",").map((tag) => tag.trim());
   }
 
+  if (req.body.size) {
+    if (typeof req.body.size === "string") {
+      req.body.size = req.body.size.split(",").map((s) => s.trim());
+    }
+  }
+
   if (req.body && req.body.title) {
     req.body.slug = slugify(req.body.title);
   }
+
   const response = await Product.findByIdAndUpdate(pid, req.body, {
     new: true,
   });
@@ -432,6 +445,173 @@ const removeVariant = asyncHandler(async (req, res) => {
   });
 });
 
+const getProductsWithLatestRating = asyncHandler(async (req, res) => {
+  // Tìm tất cả sản phẩm có ít nhất một đánh giá và sắp xếp theo ngày đánh giá mới nhất
+  const response = await Product.aggregate([
+    {
+      $match: {
+        ratings: { $ne: [] }, // Lọc các sản phẩm có ít nhất một đánh giá
+      },
+    },
+    {
+      $project: {
+        title: 1,
+        ratings: 1,
+        category: 1,
+        color: 1,
+        brand: 1,
+        price: 1,
+        discount: 1,
+        thumb: 1,
+        totalratings: 1,
+        createdAt: 1,
+      },
+    },
+    {
+      $unwind: "$ratings", // Tháo rời mảng ratings để dễ sắp xếp và populate
+    },
+    {
+      $sort: {
+        "ratings.updatedAt": -1, // Sắp xếp các đánh giá theo thời gian cập nhật
+      },
+    },
+    {
+      $lookup: {
+        from: "users", // Tên bảng Users trong MongoDB
+        localField: "ratings.postedby", // Trường `postedby` trong mảng ratings
+        foreignField: "_id", // Trường `_id` trong bảng Users
+        as: "ratings.user", // Kết quả của populate sẽ được lưu vào trường `ratings.user`
+      },
+    },
+    {
+      $unwind: "$ratings.user", // Giải nén kết quả populate ra từng đối tượng người dùng
+    },
+    {
+      $project: {
+        title: 1,
+        ratings: {
+          _id: 1,
+          star: 1,
+          comment: 1,
+          updatedAt: 1,
+          postedby: 1,
+          user: { email: 1 }, // Chỉ lấy trường `email` của user
+        },
+        category: 1,
+        color: 1,
+        brand: 1,
+        price: 1,
+        discount: 1,
+        thumb: 1,
+        totalratings: 1,
+        createdAt: 1,
+      },
+    },
+    {
+      $group: {
+        _id: "$_id",
+        title: { $first: "$title" },
+        ratings: { $push: "$ratings" }, // Lưu tất cả các đánh giá vào mảng
+        category: { $first: "$category" },
+        color: { $first: "$color" },
+        brand: { $first: "$brand" },
+        price: { $first: "$price" },
+        discount: { $first: "$discount" },
+        thumb: { $first: "$thumb" },
+        totalratings: { $first: "$totalratings" },
+        createdAt: { $first: "$createdAt" },
+      },
+    },
+    {
+      $sort: {
+        "ratings.updatedAt": -1, // Sắp xếp lại theo thời gian cập nhật đánh giá mới nhất
+      },
+    },
+    {
+      $limit: 10, // Giới hạn số lượng sản phẩm hiển thị
+    },
+  ]);
+
+  res.status(200).json({
+    success: response ? true : false,
+    products: response || "Đã xảy ra lỗi",
+  });
+});
+
+const deleteRatingFromProduct = asyncHandler(async (req, res) => {
+  const { pid, ratingId } = req.params; // Lấy ID sản phẩm và ID đánh giá từ params
+
+  // Tìm sản phẩm và xóa đánh giá trong mảng ratings
+  const updatedProduct = await Product.findOneAndUpdate(
+    { _id: pid, "ratings._id": ratingId }, // Tìm sản phẩm có chứa đánh giá này
+    {
+      $pull: { ratings: { _id: ratingId } }, // Xóa đánh giá dựa trên _id của đánh giá
+    },
+    { new: true } // Trả về sản phẩm đã được cập nhật
+  );
+
+  if (!updatedProduct) {
+    return res.status(404).json({
+      success: false,
+      message: "Không tìm thấy sản phẩm hoặc đánh giá.",
+    });
+  }
+
+  // Tính lại totalratings sau khi xóa một đánh giá
+  let totalratings = 0;
+  if (updatedProduct.ratings.length > 0) {
+    // Nếu còn đánh giá, tính trung bình các sao
+    totalratings =
+      updatedProduct.ratings.reduce((sum, rating) => sum + rating.star, 0) /
+      updatedProduct.ratings.length;
+  }
+
+  // Cập nhật lại totalratings của sản phẩm
+  updatedProduct.totalratings = totalratings;
+
+  // Lưu sản phẩm đã được cập nhật
+  await updatedProduct.save();
+
+  res.status(200).json({
+    success: true,
+    message:
+      "Đánh giá đã được xóa thành công và tổng đánh giá đã được cập nhật.",
+    products: updatedProduct, // Trả về sản phẩm đã được cập nhật
+  });
+});
+
+const getAllRatingsByProduct = asyncHandler(async (req, res) => {
+  const { pid } = req.params; // Lấy productId từ params của URL
+
+  if (!pid) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Product ID is required" });
+  }
+
+  try {
+    // Tìm sản phẩm theo productId và lấy tất cả đánh giá
+    const product = await Product.findById(pid)
+      .select("ratings")
+      .populate("ratings.postedby", "email");
+
+    if (!product) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Product not found" });
+    }
+
+    // Trả về tất cả đánh giá của sản phẩm
+    return res.status(200).json({
+      success: true,
+      ratings: product.ratings, // Chỉ trả về mảng ratings của sản phẩm
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
 module.exports = {
   createProduct,
   getProduct,
@@ -444,4 +624,7 @@ module.exports = {
   addVariant,
   updateVariant,
   removeVariant,
+  getProductsWithLatestRating,
+  deleteRatingFromProduct,
+  getAllRatingsByProduct,
 };

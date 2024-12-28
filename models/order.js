@@ -8,6 +8,7 @@ var orderSchema = new mongoose.Schema(
         product: { type: mongoose.Schema.Types.ObjectId, ref: "Product" },
         quantity: Number,
         color: { type: mongoose.Schema.Types.ObjectId, ref: "Color" },
+        size: { type: mongoose.Schema.Types.ObjectId, ref: "Size" },
         price: Number,
         discount: Number,
         thumb: String,

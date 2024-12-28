@@ -250,7 +250,11 @@ const current = asyncHandler(async (req, res) => {
         },
         {
           path: "color",
-          select: "title code", // Thêm màu sắc (title và code)
+          select: "title code",
+        },
+        {
+          path: "size",
+          select: "title",
         },
       ],
     })
@@ -357,14 +361,24 @@ const updateUserAddress = asyncHandler(async (req, res) => {
 
 const updateCart = asyncHandler(async (req, res) => {
   const { _id } = req.user;
-  const { pid, quantity = 1, color, price, discount, thumb, title } = req.body;
-  if (!pid || !color) throw new Error("Missing input");
+  const {
+    pid,
+    quantity = 1,
+    color,
+    price,
+    discount,
+    thumb,
+    title,
+    size,
+  } = req.body;
+  if (!pid || !color || !size) throw new Error("Missing input");
 
   const userCart = await User.findById(_id).select("cart");
   const alreadyProduct = userCart?.cart?.find(
     (el) =>
       el.product.toString() === pid.toString() &&
-      el.color.toString() === color.toString()
+      el.color.toString() === color.toString() &&
+      el.size.toString() === size.toString()
   );
 
   if (alreadyProduct) {
@@ -377,6 +391,7 @@ const updateCart = asyncHandler(async (req, res) => {
           "cart.$.discount": discount,
           "cart.$.thumb": thumb,
           "cart.$.title": title,
+          "cart.$.size": size,
         },
       },
       { new: true }
@@ -398,6 +413,7 @@ const updateCart = asyncHandler(async (req, res) => {
             discount: discount,
             thumb,
             title,
+            size,
           },
         },
       },
@@ -414,17 +430,19 @@ const updateCart = asyncHandler(async (req, res) => {
 
 const removeProductCart = asyncHandler(async (req, res) => {
   const { _id } = req.user;
-  const { pid, color } = req.params;
+  const { pid, color, size } = req.params;
 
   // Chuyển đổi color thành ObjectId
   const colorId = mongoose.Types.ObjectId(color);
+  const sizeId = mongoose.Types.ObjectId(size);
 
   // Tìm đối tượng trong giỏ hàng với pid và color là ObjectId
   const userCart = await User.findById(_id).select("cart");
   const alreadyProduct = userCart?.cart?.find(
     (el) =>
       el.product.toString() === pid.toString() &&
-      el.color.toString() === colorId.toString()
+      el.color.toString() === colorId.toString() &&
+      el.size.toString() === size.toString()
   );
 
   if (!alreadyProduct) {
@@ -437,7 +455,7 @@ const removeProductCart = asyncHandler(async (req, res) => {
   const response = await User.findByIdAndUpdate(
     _id,
     {
-      $pull: { cart: { product: pid, color: colorId } },
+      $pull: { cart: { product: pid, color: colorId, size: sizeId } },
     },
     {
       new: true,

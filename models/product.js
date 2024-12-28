@@ -92,6 +92,12 @@ var productSchema = new mongoose.Schema(
     tags: {
       type: [String],
     },
+    size: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Size",
+      },
+    ],
   },
   {
     timestamps: true,

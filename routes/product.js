@@ -14,8 +14,21 @@ const {
   removeVariant,
   updateVariant,
   getAllProducts,
+  getProductsWithLatestRating,
+  deleteRatingFromProduct,
+  getAllRatingsByProduct,
 } = require("../controllers/product");
 
+router.get(
+  "/latest-ratings",
+  [verifyAccessToken, isAdmin],
+  getProductsWithLatestRating
+);
+router.get(
+  "/:pid/ratings",
+  [verifyAccessToken, isAdmin],
+  getAllRatingsByProduct
+);
 router.get("/getall", getAllProducts);
 router.put("/ratings", verifyAccessToken, ratings);
 
@@ -86,6 +99,12 @@ router.put(
     },
   ]),
   updateVariant
+);
+
+router.delete(
+  "/:pid/rating/:ratingId",
+  [verifyAccessToken, isAdmin],
+  deleteRatingFromProduct
 );
 
 router.delete(

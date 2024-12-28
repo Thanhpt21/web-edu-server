@@ -33,7 +33,11 @@ router.put(
 );
 router.put("/address", verifyAccessToken, updateUserAddress);
 router.put("/cart", verifyAccessToken, updateCart);
-router.delete("/remove-cart/:pid/:color", verifyAccessToken, removeProductCart);
+router.delete(
+  "/remove-cart/:pid/:color/:size",
+  verifyAccessToken,
+  removeProductCart
+);
 
 router.post("/refreshtoken", refreshAccessToken);
 router.get("/logout", logout);

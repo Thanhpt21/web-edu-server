@@ -67,7 +67,21 @@ const getOrderByUser = asyncHandler(async (req, res) => {
   let query = Order.find(q)
     .populate("orderBy", "firstname lastname email mobile address")
     .populate("coupon", "name discount")
-    .populate("ship", "province price");
+    .populate("ship", "province price")
+    .populate({
+      path: "products", // Chỉ định trường 'products'
+      populate: [
+        {
+          path: "size", // Populate trường 'size'
+          select: "title", // Chỉ chọn trường 'title'
+        },
+        {
+          path: "color", // Populate trường 'color'
+          select: "title", // Chỉ chọn trường 'title'
+        },
+      ],
+    });
+
   //sorting
   if (req.query.sort) {
     const sortBy = req.query.sort.split(",").join(" ");
@@ -120,10 +134,16 @@ const getOrderByAdmin = asyncHandler(async (req, res) => {
     .populate("ship", "province price")
     .populate({
       path: "products", // Chỉ định trường 'products'
-      populate: {
-        path: "color", // Chỉ định trường 'color' trong 'products'
-        select: "title code", // Chỉ chọn các trường cần thiết (ví dụ: name, hexCode)
-      },
+      populate: [
+        {
+          path: "size", // Populate trường 'size'
+          select: "title", // Chỉ chọn trường 'title'
+        },
+        {
+          path: "color", // Populate trường 'color'
+          select: "title", // Chỉ chọn trường 'title'
+        },
+      ],
     });
 
   //sorting

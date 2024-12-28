@@ -80,7 +80,7 @@ const getBrands = asyncHandler(async (req, res) => {
   }
 
   const page = +req.query.page || 1;
-  const limit = +req.query.limit || 4;
+  const limit = +req.query.limit || 10;
   const skip = (page - 1) * limit;
   query = query.skip(skip).limit(limit);
   query.exec(async (err, response) => {
