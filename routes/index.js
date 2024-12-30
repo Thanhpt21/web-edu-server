@@ -15,6 +15,12 @@ const retailRouter = require("./retail");
 const uploadRouter = require("./upload");
 const permissionRouter = require("./permission");
 const sizeRouter = require("./size");
+const lessonRouter = require("./lesson");
+const questionRouter = require("./question");
+const resultRouter = require("./result");
+const quizRouter = require("./quiz");
+const historyRouter = require("./history");
+const lessoncategoryRouter = require("./lessoncategory");
 
 const { notFound, errorHandler } = require("../middlewares/errorHandle");
 
@@ -36,6 +42,12 @@ const initRouter = (app) => {
   app.use("/api/upload", uploadRouter);
   app.use("/api/permission", permissionRouter);
   app.use("/api/size", sizeRouter);
+  app.use("/api/lesson", lessonRouter);
+  app.use("/api/question", questionRouter);
+  app.use("/api/result", resultRouter);
+  app.use("/api/quiz", quizRouter);
+  app.use("/api/history", historyRouter);
+  app.use("/api/lessoncategory", lessoncategoryRouter);
   app.use(notFound);
   app.use(errorHandler);
 };
