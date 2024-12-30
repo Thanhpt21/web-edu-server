@@ -3,6 +3,9 @@ const mongoose = require("mongoose");
 const retailSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
+    images: {
+      type: String,
+    },
     address: { type: String, required: true },
     mobile: { type: String, required: true },
     link: { type: String, required: true },

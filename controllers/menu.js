@@ -20,6 +20,7 @@ const getMenus = asyncHandler(async (req, res) => {
     });
   }
 });
+
 const createMenu = asyncHandler(async (req, res) => {
   const { value, path, type, parent, orderly } = req.body;
 
@@ -101,6 +102,7 @@ const createMenu = asyncHandler(async (req, res) => {
     });
   }
 });
+
 // Hàm cập nhật menu
 const updateMenu = asyncHandler(async (req, res) => {
   const { id } = req.params;
@@ -148,9 +150,7 @@ const updateMenu = asyncHandler(async (req, res) => {
       existingMenu.submenu = [];
     } else if (type === "PARENT") {
       // Nếu là menu con (type === "PARENT")
-
       // Cập nhật submenu của các menu cha
-      // Lấy danh sách các menu cha của menu con
       const parentMenus = await Menu.find({ "submenu._id": existingMenu._id });
 
       for (const parentMenu of parentMenus) {
@@ -165,6 +165,26 @@ const updateMenu = asyncHandler(async (req, res) => {
           parentMenu.submenu[submenuIndex].orderly = orderly;
 
           await parentMenu.save();
+        }
+      }
+
+      // Nếu là loại menu PARENT và menu này chưa có trong submenu của menu cha, ta cần thêm vào.
+      if (parent && parent.length > 0) {
+        for (const parentId of parent) {
+          const parentMenu = await Menu.findById(parentId);
+          if (parentMenu) {
+            // Kiểm tra xem menu đã tồn tại trong submenu chưa
+            const isAlreadySubmenu = parentMenu.submenu.some(
+              (submenu) =>
+                submenu._id.toString() === existingMenu._id.toString()
+            );
+
+            // Nếu chưa, thêm menu vào submenu của menu cha
+            if (!isAlreadySubmenu) {
+              parentMenu.submenu.push(existingMenu);
+              await parentMenu.save();
+            }
+          }
         }
       }
     }

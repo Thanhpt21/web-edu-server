@@ -62,6 +62,16 @@ const login = asyncHandler(async (req, res) => {
       message: "Dữ liệu không được để trống ",
     });
   const response = await User.findOne({ email });
+  if (!response) {
+    throw new Error("Thông tin đăng nhập không hợp lệ");
+  }
+  if (response.isBlocked === "2") {
+    return res.status(403).json({
+      success: false,
+      message: "Tài khoản của bạn đã bị khóa",
+    });
+  }
+
   if (response && (await response.isPasswordMatched(password))) {
     const { password, role, refreshToken, ...userData } = response.toObject();
     const accessToken = generateAccessToken(response._id, role);

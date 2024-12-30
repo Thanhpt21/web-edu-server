@@ -3,8 +3,10 @@ const asyncHandler = require("express-async-handler");
 
 const createRetail = asyncHandler(async (req, res) => {
   const { name, mobile, link, iframe, address } = req.body;
+  const images = req?.file?.path;
   if (!name && !mobile && !link && !iframe && !address)
     throw new Error("Missing input");
+  if (images) req.body.images = images;
   const response = await Retail.create(req.body);
   res.status(200).json({
     success: response ? true : false,
@@ -73,6 +75,9 @@ const getAllRetails = asyncHandler(async (req, res) => {
 
 const updateRetail = asyncHandler(async (req, res) => {
   const { rid } = req.params;
+  if (req.file) {
+    req.body.images = req.file.path;
+  }
   const response = await Retail.findByIdAndUpdate(rid, req.body, {
     new: true,
   });
@@ -84,7 +89,7 @@ const updateRetail = asyncHandler(async (req, res) => {
 
 const deleteRetail = asyncHandler(async (req, res) => {
   const { rid } = req.params;
-  const response = await Ship.findByIdAndDelete(rid);
+  const response = await Retail.findByIdAndDelete(rid);
   res.status(200).json({
     success: response ? true : false,
     message: response ? "Xóa thành công" : "Đã xảy ra lỗi",
